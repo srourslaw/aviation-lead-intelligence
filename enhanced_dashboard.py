@@ -197,9 +197,9 @@ def search_zoominfo(company_name, ip_address):
             if key in CONTACTS_DATABASE:
                 contacts_list = CONTACTS_DATABASE[key]
                 
-                # Randomize contacts selection based on IP
-                random.seed(hash(ip_address))
-                num_contacts = random.randint(6, min(len(contacts_list), 12))
+                # Randomize contacts selection based on IP - ensure different results per IP
+                random.seed(hash(ip_address + company_name))  # Use both IP and company for more variety
+                num_contacts = random.randint(8, min(len(contacts_list), 15))  # Minimum 8 contacts
                 selected_contacts = random.sample(contacts_list, num_contacts)
                 
                 # Add randomized metadata
@@ -446,45 +446,260 @@ if st.session_state.processed_results:
                 </div>
                 """, unsafe_allow_html=True)
             
-            # Charts
-            st.markdown("#### 📊 Business Intelligence")
+            # Business Intelligence Visualizations
+            st.markdown("#### 📊 Business Intelligence Analysis")
             
-            chart_col1, chart_col2 = st.columns(2)
+            viz_col1, viz_col2 = st.columns(2)
             
-            with chart_col1:
-                # Lead score gauge
+            with viz_col1:
+                # Lead Score Gauge Chart with IP-specific variation
+                random.seed(hash(ip + company_name))
+                actual_score = score_value + random.randint(-8, 8)  # Add variation based on IP
+                actual_score = max(50, min(100, actual_score))  # Keep in range
+                
                 fig_gauge = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=score_value,
+                    mode="gauge+number+delta",
+                    value=actual_score,
                     domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': "Lead Score"},
+                    title={'text': f"Lead Score: {company_info['name']}", 'font': {'size': 14}},
+                    delta={'reference': 50},
                     gauge={
-                        'axis': {'range': [None, 100]},
+                        'axis': {'range': [None, 100], 'tickfont': {'size': 12}},
                         'bar': {'color': "#667eea"},
                         'steps': [
                             {'range': [0, 50], 'color': "#ffebee"},
                             {'range': [50, 80], 'color': "#e3f2fd"},
                             {'range': [80, 100], 'color': "#e8f5e8"}
-                        ]
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': 90
+                        }
                     }
                 ))
-                fig_gauge.update_layout(height=300)
+                fig_gauge.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=20))
                 st.plotly_chart(fig_gauge, use_container_width=True, key=f"gauge_chart_{i}")
                 
+            with viz_col2:
+                # Revenue Potential Distribution Curve - IP-specific
+                random.seed(hash(ip + company_name + "revenue"))
+                if 'boeing' in company_name:
+                    revenue_min, revenue_max = 500000, 2000000
+                elif any(airline in company_name for airline in ['delta', 'american', 'united']):
+                    revenue_min, revenue_max = 200000, 800000
+                elif 'lufthansa' in company_name:
+                    revenue_min, revenue_max = 100000, 500000
+                elif 'rolls-royce' in company_name:
+                    revenue_min, revenue_max = 300000, 1000000
+                else:
+                    revenue_min, revenue_max = 50000, 300000
+                
+                # Add IP-specific variation to revenue ranges
+                actual_rev_min = revenue_min + random.randint(-50000, 50000)
+                actual_rev_max = revenue_max + random.randint(-100000, 100000)
+                actual_rev_min = max(10000, actual_rev_min)
+                actual_rev_max = max(actual_rev_min + 50000, actual_rev_max)
+                
+                # Create revenue probability distribution
+                revenue_range = np.linspace(actual_rev_min, actual_rev_max, 100)
+                center = (actual_rev_min + actual_rev_max) / 2
+                width_factor = 4 + random.randint(1, 4)  # Vary curve width
+                probability = np.exp(-((revenue_range - center)**2) / (2 * ((actual_rev_max - actual_rev_min)/width_factor)**2))
+                
+                fig_revenue = go.Figure()
+                fig_revenue.add_trace(go.Scatter(
+                    x=revenue_range/1000,  # Convert to thousands
+                    y=probability,
+                    fill='tozeroy',
+                    fillcolor='rgba(102, 126, 234, 0.3)',
+                    line=dict(color='#667eea', width=2),
+                    name='Revenue Probability',
+                    hovertemplate='Revenue: $%{x}K<br>Probability: %{y:.2f}<extra></extra>'
+                ))
+                fig_revenue.update_layout(
+                    title={'text': f'Revenue Potential: {company_info["name"]}', 'font': {'size': 14}},
+                    xaxis_title={'text': 'Revenue (K$)', 'font': {'size': 12}},
+                    yaxis_title={'text': 'Probability', 'font': {'size': 12}},
+                    height=300,
+                    margin=dict(l=40, r=20, t=40, b=40),
+                    showlegend=False
+                )
+                st.plotly_chart(fig_revenue, use_container_width=True, key=f"revenue_curve_{i}")
+            
+            # Company Analysis Charts
+            st.markdown("#### 🏢 Company Profile Analysis")
+            
+            chart_col1, chart_col2 = st.columns(2)
+            
+            with chart_col1:
+                # Industry Comparison Bar Chart - Realistic data based on IP/Company
+                random.seed(hash(ip + "industry"))
+                
+                # Base industry scores with realistic variations
+                base_industry_data = {
+                    'Aerospace & Defense': (82, 92),
+                    'Commercial Aviation': (85, 95), 
+                    'Aircraft Maintenance': (70, 85),
+                    'Engine Manufacturing': (78, 88),
+                    'Business Services': (55, 75)
+                }
+                
+                industry_data = {}
+                for industry, (min_score, max_score) in base_industry_data.items():
+                    industry_data[industry] = random.randint(min_score, max_score)
+                
+                current_industry = company_info['industry']
+                if current_industry in industry_data:
+                    industry_data[current_industry] = int(actual_score)
+                
+                colors = ['#667eea' if industry == current_industry else '#e0e0e0' for industry in industry_data.keys()]
+                
+                fig_industry = go.Figure(data=[
+                    go.Bar(
+                        x=list(industry_data.keys()),
+                        y=list(industry_data.values()),
+                        marker_color=colors,
+                        text=list(industry_data.values()),
+                        textposition='auto',
+                        hovertemplate='Industry: %{x}<br>Score: %{y}<extra></extra>'
+                    )
+                ])
+                fig_industry.update_layout(
+                    title={'text': 'Industry Lead Score Comparison', 'font': {'size': 14}},
+                    xaxis_title={'text': 'Industry', 'font': {'size': 12}},
+                    yaxis_title={'text': 'Avg Lead Score', 'font': {'size': 12}},
+                    height=300,
+                    margin=dict(l=40, r=20, t=40, b=80),
+                    xaxis={'tickangle': -45, 'tickfont': {'size': 10}}
+                )
+                st.plotly_chart(fig_industry, use_container_width=True, key=f"industry_chart_{i}")
+                
             with chart_col2:
-                # Contact distribution
-                seniority_counts = {}
+                # Contact Roles Distribution Pie Chart - Based on actual contacts
+                contact_roles = {}
                 for contact in zoominfo_data['contacts']:
                     seniority = contact.get('seniority', 'Director')
-                    seniority_counts[seniority] = seniority_counts.get(seniority, 0) + 1
+                    if seniority == 'C-Level':
+                        category = 'C-Level Executives'
+                    elif seniority == 'VP-Level':
+                        category = 'VP/Senior Directors'
+                    else:
+                        category = 'Directors/Managers'
+                    
+                    contact_roles[category] = contact_roles.get(category, 0) + 1
                 
-                fig_pie = go.Figure(data=[go.Pie(
-                    labels=list(seniority_counts.keys()),
-                    values=list(seniority_counts.values()),
-                    hole=0.3
+                fig_contacts = go.Figure(data=[go.Pie(
+                    labels=list(contact_roles.keys()),
+                    values=list(contact_roles.values()),
+                    hole=.3,
+                    marker_colors=['#667eea', '#764ba2', '#00C851'],
+                    hovertemplate='%{label}<br>Count: %{value}<br>Percentage: %{percent}<extra></extra>'
                 )])
-                fig_pie.update_layout(title="Contact Seniority", height=300)
-                st.plotly_chart(fig_pie, use_container_width=True, key=f"pie_chart_{i}")
+                fig_contacts.update_layout(
+                    title={'text': 'Contact Seniority Distribution', 'font': {'size': 14}},
+                    height=300,
+                    margin=dict(l=20, r=20, t=40, b=20)
+                )
+                st.plotly_chart(fig_contacts, use_container_width=True, key=f"contacts_pie_{i}")
+            
+            # ROI Calculator - IP-specific values
+            st.markdown("#### 💰 ROI Calculator & Financial Analysis")
+            
+            roi_col1, roi_col2, roi_col3 = st.columns(3)
+            
+            with roi_col1:
+                # Realistic conversion rates based on company type
+                random.seed(hash(ip + "conversion"))
+                if 'boeing' in company_name:
+                    conversion_rate = random.uniform(0.18, 0.25)
+                elif any(airline in company_name for airline in ['delta', 'american', 'united']):
+                    conversion_rate = random.uniform(0.12, 0.18)
+                elif 'lufthansa' in company_name:
+                    conversion_rate = random.uniform(0.08, 0.14)
+                elif 'rolls-royce' in company_name:
+                    conversion_rate = random.uniform(0.15, 0.22)
+                else:
+                    conversion_rate = random.uniform(0.05, 0.12)
+                    
+                st.markdown(f"""
+                <div class="compact-metric">
+                    <h4>Est. Conversion Rate</h4>
+                    <h2>{conversion_rate:.1%}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with roi_col2:
+                expected_value = (actual_rev_min + actual_rev_max) / 2 * conversion_rate
+                st.markdown(f"""
+                <div class="compact-metric">
+                    <h4>Expected Value</h4>
+                    <h2>${expected_value:,.0f}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with roi_col3:
+                # Realistic cost per lead based on company complexity
+                random.seed(hash(ip + "cost"))
+                if 'boeing' in company_name:
+                    cost_per_lead = random.randint(12000, 18000)
+                elif any(airline in company_name for airline in ['delta', 'american', 'united']):
+                    cost_per_lead = random.randint(7000, 12000)
+                elif 'lufthansa' in company_name:
+                    cost_per_lead = random.randint(8000, 14000)
+                elif 'rolls-royce' in company_name:
+                    cost_per_lead = random.randint(10000, 15000)
+                else:
+                    cost_per_lead = random.randint(4000, 8000)
+                
+                roi_percentage = (expected_value / cost_per_lead) * 100 if cost_per_lead > 0 else 0
+                st.markdown(f"""
+                <div class="compact-metric">
+                    <h4>ROI Potential</h4>
+                    <h2>{roi_percentage:.0f}%</h2>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Revenue Distribution Histogram
+            st.markdown("#### 📈 Revenue Distribution Analysis")
+            
+            # Create histogram of potential revenue outcomes
+            random.seed(hash(ip + "histogram"))
+            revenue_samples = np.random.normal(
+                (actual_rev_min + actual_rev_max) / 2, 
+                (actual_rev_max - actual_rev_min) / 6, 
+                1000
+            )
+            revenue_samples = np.clip(revenue_samples, actual_rev_min * 0.5, actual_rev_max * 1.5)
+            
+            fig_hist = go.Figure(data=[go.Histogram(
+                x=revenue_samples/1000,
+                nbinsx=30,
+                marker_color='rgba(102, 126, 234, 0.7)',
+                name='Revenue Distribution',
+                hovertemplate='Revenue Range: $%{x}K<br>Frequency: %{y}<extra></extra>'
+            )])
+            
+            fig_hist.update_layout(
+                title=f'Revenue Potential Distribution - {company_info["name"]}',
+                xaxis_title='Revenue (K$)',
+                yaxis_title='Frequency',
+                height=350,
+                margin=dict(l=40, r=20, t=40, b=40),
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig_hist, use_container_width=True, key=f"revenue_histogram_{i}")
+            
+            # Debug info for verification
+            st.markdown(f"**🔍 Analysis Summary for IP {ip}:**")
+            st.markdown(f"- **Lead Score:** {actual_score}/100")
+            st.markdown(f"- **Revenue Range:** ${actual_rev_min:,} - ${actual_rev_max:,}")
+            st.markdown(f"- **Conversion Rate:** {conversion_rate:.1%}")
+            st.markdown(f"- **Expected Value:** ${expected_value:,.0f}")
+            st.markdown(f"- **Cost per Lead:** ${cost_per_lead:,}")
+            st.markdown(f"- **ROI:** {roi_percentage:.0f}%")
+            st.markdown(f"- **Contacts Found:** {len(zoominfo_data['contacts'])}")
 
 else:
     st.info("👆 Enter an IP address or click a demo button to get started!")
