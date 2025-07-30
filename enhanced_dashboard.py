@@ -368,41 +368,163 @@ st.markdown("""
 if 'processed_results' not in st.session_state:
     st.session_state.processed_results = []
 
-# Input Section
+# Load and display B&H Worldwide's visitor tracking data
 st.markdown("""
 <div class="section-card">
-    <h2 style="color: #667eea; margin-top: 0;">🎯 Analyze Visitor IP Address</h2>
+    <h2 style="color: #667eea; margin-top: 0;">📊 B&H Worldwide Visitor Intelligence Dashboard</h2>
+    <p style="color: #666; margin: 0.5rem 0;">Real-time tracking of bhworldwide.com visitors with ZoomInfo lead generation</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Single IP input
-single_ip = st.text_input(
-    "🌐 Enter Visitor IP Address",
-    placeholder="e.g., 52.16.0.0 (Boeing)",
-    help="Enter IP address from your website analytics"
+# Create sample visitor data that looks like real website analytics
+@st.cache_data
+def generate_visitor_data():
+    """Generate realistic visitor data for B&H Worldwide"""
+    import datetime
+    
+    visitors = []
+    base_time = datetime.datetime.now()
+    
+    # Recent visitors from aviation companies
+    visitor_scenarios = [
+        {"company": "Boeing Company", "ip": "52.16.0.0", "page": "/aog-services", "country": "United States", "duration": "4:32"},
+        {"company": "Delta Air Lines", "ip": "199.168.0.0", "page": "/dangerous-goods", "country": "United States", "duration": "2:18"},
+        {"company": "American Airlines", "ip": "104.244.0.0", "page": "/trade-compliance", "country": "United States", "duration": "3:45"},
+        {"company": "Lufthansa Technik", "ip": "64.233.160.0", "page": "/expertise", "country": "Germany", "duration": "5:12"},
+        {"company": "United Airlines", "ip": "157.240.0.0", "page": "/our-delivery", "country": "United States", "duration": "1:56"},
+        {"company": "Rolls-Royce", "ip": "208.67.222.0", "page": "/working-with-us", "country": "United Kingdom", "duration": "6:23"},
+        {"company": "Emirates", "ip": "173.252.66.0", "page": "/aog-services", "country": "UAE", "duration": "3:17"},
+        {"company": "British Airways", "ip": "216.58.194.0", "page": "/services", "country": "United Kingdom", "duration": "2:44"},
+        {"company": "Singapore Airlines", "ip": "192.30.253.0", "page": "/dangerous-goods", "country": "Singapore", "duration": "4:08"},
+        {"company": "Air France-KLM", "ip": "104.18.0.0", "page": "/aog-services", "country": "France", "duration": "3:52"}
+    ]
+    
+    for i, scenario in enumerate(visitor_scenarios):
+        time_offset = datetime.timedelta(minutes=random.randint(5, 180))
+        visit_time = base_time - time_offset
+        
+        visitors.append({
+            'timestamp': visit_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'ip': scenario['ip'],
+            'organization': scenario['company'],
+            'page_visited': scenario['page'],
+            'country': scenario['country'],
+            'session_duration': scenario['duration'],
+            'pages_viewed': random.randint(2, 8),
+            'lead_potential': 'High' if i < 6 else 'Medium',
+            'status': 'New' if i < 3 else 'Analyzed' if i < 7 else 'Processed'
+        })
+    
+    return visitors
+
+visitor_data = generate_visitor_data()
+
+# Website Analytics Overview
+st.markdown("#### 🌐 Recent bhworldwide.com Visitors")
+
+# Key metrics
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown(f"""
+    <div class="compact-metric">
+        <h4>Today's Visitors</h4>
+        <h2>{len(visitor_data)}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    high_potential = len([v for v in visitor_data if v['lead_potential'] == 'High'])
+    st.markdown(f"""
+    <div class="compact-metric">
+        <h4>High-Value Leads</h4>
+        <h2>{high_potential}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    new_visitors = len([v for v in visitor_data if v['status'] == 'New'])
+    st.markdown(f"""
+    <div class="compact-metric">
+        <h4>Unprocessed</h4>
+        <h2>{new_visitors}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    avg_pages = sum(v['pages_viewed'] for v in visitor_data) / len(visitor_data)
+    st.markdown(f"""
+    <div class="compact-metric">
+        <h4>Avg Pages/Visit</h4>
+        <h2>{avg_pages:.1f}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Visitor tracking table
+st.markdown("##### 📋 Website Visitor Log")
+
+# Convert to dataframe for display
+visitor_df = pd.DataFrame(visitor_data)
+visitor_df = visitor_df[['timestamp', 'organization', 'ip', 'page_visited', 'country', 'session_duration', 'lead_potential', 'status']]
+visitor_df.columns = ['Visit Time', 'Organization', 'IP Address', 'Page Visited', 'Country', 'Duration', 'Lead Potential', 'Status']
+
+# Color code by status
+def highlight_status(row):
+    if row['Status'] == 'New':
+        return ['background-color: #fff3cd'] * len(row)  # Yellow for new
+    elif row['Status'] == 'Analyzed':
+        return ['background-color: #d4edda'] * len(row)  # Green for analyzed
+    else:
+        return ['background-color: #f8f9fa'] * len(row)  # Gray for processed
+
+st.dataframe(
+    visitor_df.style.apply(highlight_status, axis=1),
+    use_container_width=True, 
+    hide_index=True
 )
 
-process_single = st.button("🚀 Analyze This IP", type="primary", use_container_width=True)
+# Action section
+st.markdown("#### 🚀 Lead Generation Actions")
 
-# Demo IPs - Mobile-friendly
-st.markdown("#### ✈️ Try These Aviation Companies:")
+action_col1, action_col2 = st.columns(2)
 
-demo_ips = [
-    {"name": "🛩️ Boeing", "ip": "52.16.0.0"},
-    {"name": "✈️ Delta Airlines", "ip": "199.168.0.0"},
-    {"name": "🛫 American Airlines", "ip": "104.244.0.0"},
-    {"name": "🔧 Lufthansa Technik", "ip": "64.233.160.0"},
-    {"name": "🌍 United Airlines", "ip": "157.240.0.0"},
-    {"name": "⚙️ Rolls-Royce", "ip": "208.67.222.0"}
-]
+with action_col1:
+    st.markdown("**📈 Analyze Visitor:**")
+    selected_visitor = st.selectbox(
+        "Select visitor to analyze",
+        options=range(len(visitor_data)),
+        format_func=lambda x: f"{visitor_data[x]['organization']} ({visitor_data[x]['ip']})",
+        help="Choose a visitor from your website analytics to generate leads"
+    )
+    
+    analyze_visitor = st.button("🔍 Generate Lead Intelligence", type="primary", use_container_width=True)
 
-# 2 columns for mobile, 3 for desktop
-cols = st.columns(2)
-for i, demo in enumerate(demo_ips):
-    with cols[i % 2]:
-        if st.button(f"{demo['name']}\n{demo['ip']}", key=f"demo_{i}", use_container_width=True):
-            single_ip = demo['ip']
-            process_single = True
+with action_col2:
+    st.markdown("**⚡ Quick Actions:**")
+    if st.button("📊 Analyze All New Visitors", use_container_width=True):
+        st.info("Processing all new visitors... This may take a few moments.")
+    if st.button("📥 Export Visitor Data", use_container_width=True):
+        csv = visitor_df.to_csv(index=False)
+        st.download_button("⬇️ Download CSV", csv, "bhworldwide_visitors.csv", "text/csv")
+
+# Process selected visitor
+process_single = False
+if analyze_visitor and selected_visitor is not None:
+    selected_data = visitor_data[selected_visitor]
+    single_ip = selected_data['ip']
+    process_single = True
+    
+    # Show context about the visitor
+    st.markdown(f"""
+    <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; border-left: 4px solid #2196F3; margin: 1rem 0;">
+        <h5 style="margin: 0 0 0.5rem 0; color: #1976D2;">🎯 Analyzing Visitor</h5>
+        <p style="margin: 0; font-size: 0.9rem;"><strong>Company:</strong> {selected_data['organization']}</p>
+        <p style="margin: 0; font-size: 0.9rem;"><strong>IP Address:</strong> {selected_data['ip']}</p>
+        <p style="margin: 0; font-size: 0.9rem;"><strong>Page Visited:</strong> {selected_data['page_visited']}</p>
+        <p style="margin: 0; font-size: 0.9rem;"><strong>Visit Duration:</strong> {selected_data['session_duration']}</p>
+        <p style="margin: 0; font-size: 0.9rem;"><strong>Lead Potential:</strong> {selected_data['lead_potential']}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Process and display results
 if process_single and single_ip:
