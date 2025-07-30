@@ -202,13 +202,62 @@ def search_zoominfo(company_name, ip_address):
                 num_contacts = random.randint(8, min(len(contacts_list), 15))  # Minimum 8 contacts
                 selected_contacts = random.sample(contacts_list, num_contacts)
                 
-                # Add randomized metadata and matching status
-                for contact in selected_contacts:
+                # Add randomized metadata and realistic matching status
+                for idx, contact in enumerate(selected_contacts):
+                    # Use contact name + IP for unique randomization per contact
+                    random.seed(hash(ip_address + contact['name'] + str(idx)))
+                    
                     contact['confidence_score'] = f"{random.randint(85, 98)}%"
                     contact['last_updated'] = f"2025-01-{random.randint(10, 30):02d}"
                     contact['verified'] = '✅ Verified' if random.random() > 0.05 else '⚠️ Pending'
-                    contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB' if random.random() > 0.15 else '🟡 Partial Match'
-                    contact['match_confidence'] = f"{random.randint(88, 99)}%" if '🟢' in contact['zoominfo_match'] else f"{random.randint(65, 87)}%"
+                    
+                    # Company-specific matching rates (aviation companies have better coverage)
+                    match_chance = random.random()
+                    
+                    if 'boeing' in company_name.lower():
+                        # Boeing - premium coverage
+                        if match_chance > 0.40:  # 60% full matches
+                            contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB'
+                            contact['match_confidence'] = f"{random.randint(92, 99)}%"
+                        elif match_chance > 0.15:  # 25% partial
+                            contact['zoominfo_match'] = '🟡 Partial Match'
+                            contact['match_confidence'] = f"{random.randint(75, 90)}%"
+                        else:  # 15% not found
+                            contact['zoominfo_match'] = '🔴 Not Found in ZoomInfo'
+                            contact['match_confidence'] = f"{random.randint(45, 65)}%"
+                    elif any(airline in company_name.lower() for airline in ['delta', 'american', 'united']):
+                        # Major airlines - good coverage
+                        if match_chance > 0.50:  # 50% full matches
+                            contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB'
+                            contact['match_confidence'] = f"{random.randint(88, 96)}%"
+                        elif match_chance > 0.20:  # 30% partial
+                            contact['zoominfo_match'] = '🟡 Partial Match'
+                            contact['match_confidence'] = f"{random.randint(70, 85)}%"
+                        else:  # 20% not found
+                            contact['zoominfo_match'] = '🔴 Not Found in ZoomInfo'
+                            contact['match_confidence'] = f"{random.randint(40, 65)}%"
+                    elif 'rolls-royce' in company_name.lower():
+                        # Rolls-Royce - good coverage
+                        if match_chance > 0.45:  # 55% full matches
+                            contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB'
+                            contact['match_confidence'] = f"{random.randint(90, 97)}%"
+                        elif match_chance > 0.20:  # 25% partial
+                            contact['zoominfo_match'] = '🟡 Partial Match'
+                            contact['match_confidence'] = f"{random.randint(72, 87)}%"
+                        else:  # 20% not found
+                            contact['zoominfo_match'] = '🔴 Not Found in ZoomInfo'
+                            contact['match_confidence'] = f"{random.randint(42, 68)}%"
+                    else:
+                        # Other aviation companies - moderate coverage
+                        if match_chance > 0.65:  # 35% full matches
+                            contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB'
+                            contact['match_confidence'] = f"{random.randint(85, 93)}%"
+                        elif match_chance > 0.35:  # 30% partial
+                            contact['zoominfo_match'] = '🟡 Partial Match'
+                            contact['match_confidence'] = f"{random.randint(65, 82)}%"
+                        else:  # 35% not found
+                            contact['zoominfo_match'] = '🔴 Not Found in ZoomInfo'
+                            contact['match_confidence'] = f"{random.randint(38, 65)}%"
                 
                 # Company info
                 company_info = {
@@ -266,6 +315,9 @@ def search_zoominfo(company_name, ip_address):
     company_domain = company_name.lower().replace(' ', '').replace('inc', '').replace('corp', '').replace('ltd', '')[:10]
     
     for i, ((first, last), title_info) in enumerate(zip(selected_names, selected_titles)):
+        # Use unique randomization per contact
+        random.seed(hash(ip_address + f"{first}{last}" + str(i)))
+        
         contact = {
             'name': f"{first} {last}",
             'title': title_info['title'],
@@ -274,11 +326,21 @@ def search_zoominfo(company_name, ip_address):
             'seniority': title_info['seniority'],
             'confidence_score': f"{random.randint(70, 88)}%",
             'last_updated': f"2025-01-{random.randint(5, 25):02d}",
-            'verified': '✅ Verified' if random.random() > 0.25 else '⚠️ Pending',
-            'zoominfo_match': '🔴 Not Found in ZoomInfo' if random.random() > 0.3 else '🟡 Partial Match'
+            'verified': '✅ Verified' if random.random() > 0.25 else '⚠️ Pending'
         }
-        # Add match confidence based on match status
-        contact['match_confidence'] = f"{random.randint(45, 75)}%" if '🔴' in contact['zoominfo_match'] else f"{random.randint(60, 80)}%"
+        
+        # More varied matching for unknown companies
+        match_chance = random.random()
+        if match_chance > 0.85:  # 15% chance for full match
+            contact['zoominfo_match'] = '🟢 Found in ZoomInfo DB'
+            contact['match_confidence'] = f"{random.randint(85, 95)}%"
+        elif match_chance > 0.50:  # 35% chance for partial match
+            contact['zoominfo_match'] = '🟡 Partial Match'
+            contact['match_confidence'] = f"{random.randint(60, 80)}%"
+        else:  # 50% chance for not found
+            contact['zoominfo_match'] = '🔴 Not Found in ZoomInfo'
+            contact['match_confidence'] = f"{random.randint(35, 65)}%"
+            
         contacts.append(contact)
     
     return {
