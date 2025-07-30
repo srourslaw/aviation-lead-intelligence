@@ -380,9 +380,15 @@ if st.session_state.processed_results:
             col1, col2 = st.columns(2)
             with col1:
                 csv = contacts_df.to_csv(index=False)
-                st.download_button("📥 Export CSV", csv, f"contacts_{company_info['name']}.csv", "text/csv")
+                st.download_button(
+                    "📥 Export CSV", 
+                    csv, 
+                    f"contacts_{company_info['name']}.csv", 
+                    "text/csv",
+                    key=f"export_csv_{i}"
+                )
             with col2:
-                st.button("📧 Send to CRM", use_container_width=True)
+                st.button("📧 Send to CRM", use_container_width=True, key=f"crm_button_{i}")
         
         with summary_tab:
             # Mobile-optimized summary
@@ -463,7 +469,7 @@ if st.session_state.processed_results:
                     }
                 ))
                 fig_gauge.update_layout(height=300)
-                st.plotly_chart(fig_gauge, use_container_width=True)
+                st.plotly_chart(fig_gauge, use_container_width=True, key=f"gauge_chart_{i}")
                 
             with chart_col2:
                 # Contact distribution
@@ -478,7 +484,7 @@ if st.session_state.processed_results:
                     hole=0.3
                 )])
                 fig_pie.update_layout(title="Contact Seniority", height=300)
-                st.plotly_chart(fig_pie, use_container_width=True)
+                st.plotly_chart(fig_pie, use_container_width=True, key=f"pie_chart_{i}")
 
 else:
     st.info("👆 Enter an IP address or click a demo button to get started!")
