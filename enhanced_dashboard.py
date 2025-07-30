@@ -224,21 +224,69 @@ def search_zoominfo(company_name, ip_address):
                     'contacts': selected_contacts
                 }
     
-    # Generic fallback
+    # Generic fallback with randomized contacts
+    random.seed(hash(ip_address + company_name + "fallback"))
+    
+    # Pool of realistic business names
+    first_names = ['Michael', 'Sarah', 'David', 'Jennifer', 'Robert', 'Lisa', 'James', 'Maria', 'John', 'Amanda', 
+                   'Christopher', 'Jessica', 'Daniel', 'Ashley', 'Matthew', 'Emily', 'Anthony', 'Melissa', 'Mark', 'Deborah',
+                   'Steven', 'Dorothy', 'Paul', 'Carol', 'Andrew', 'Ruth', 'Kenneth', 'Sharon', 'Kevin', 'Michelle',
+                   'Brian', 'Laura', 'George', 'Sarah', 'Edward', 'Kimberly', 'Ronald', 'Nancy', 'Timothy', 'Linda']
+    
+    last_names = ['Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez',
+                  'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee',
+                  'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
+                  'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green']
+    
+    titles = [
+        {'title': 'Chief Executive Officer', 'seniority': 'C-Level'},
+        {'title': 'Chief Financial Officer', 'seniority': 'C-Level'},
+        {'title': 'Chief Technology Officer', 'seniority': 'C-Level'},
+        {'title': 'Chief Operations Officer', 'seniority': 'C-Level'},
+        {'title': 'VP Business Development', 'seniority': 'VP-Level'},
+        {'title': 'VP Operations', 'seniority': 'VP-Level'},
+        {'title': 'VP Sales', 'seniority': 'VP-Level'},
+        {'title': 'VP Marketing', 'seniority': 'VP-Level'},
+        {'title': 'Director Supply Chain', 'seniority': 'Director'},
+        {'title': 'Director Procurement', 'seniority': 'Director'},
+        {'title': 'Director Business Development', 'seniority': 'Director'},
+        {'title': 'Director Operations', 'seniority': 'Director'},
+        {'title': 'Senior Manager Strategic Partnerships', 'seniority': 'Director'},
+        {'title': 'Manager Business Operations', 'seniority': 'Manager'}
+    ]
+    
+    # Generate 3-6 random contacts
+    num_contacts = random.randint(3, 6)
+    selected_names = random.sample([(f, l) for f in first_names for l in last_names], num_contacts)
+    selected_titles = random.sample(titles, num_contacts)
+    
+    contacts = []
+    company_domain = company_name.lower().replace(' ', '').replace('inc', '').replace('corp', '').replace('ltd', '')[:10]
+    
+    for i, ((first, last), title_info) in enumerate(zip(selected_names, selected_titles)):
+        contact = {
+            'name': f"{first} {last}",
+            'title': title_info['title'],
+            'email': f"{first.lower()}.{last.lower()}@{company_domain}.com",
+            'phone': f"+1-{random.randint(200, 999)}-{random.randint(200, 999)}-{random.randint(1000, 9999)}",
+            'seniority': title_info['seniority'],
+            'confidence_score': f"{random.randint(70, 88)}%",
+            'last_updated': f"2025-01-{random.randint(5, 25):02d}",
+            'verified': '✅ Verified' if random.random() > 0.25 else '⚠️ Pending'
+        }
+        contacts.append(contact)
+    
     return {
         'success': True,
         'company': {
             'name': company_name,
-            'employees': '1,000+',
-            'revenue': '$100M+',
+            'employees': f"{random.randint(500, 10000):,}+",
+            'revenue': f"${random.randint(50, 500)}M+",
             'industry': 'Business Services',
-            'headquarters': 'Various',
-            'website': 'www.company.com'
+            'headquarters': 'Various Locations',
+            'website': f"www.{company_domain}.com"
         },
-        'contacts': [
-            {'name': 'John Smith', 'title': 'CEO', 'email': 'john@company.com', 'phone': '+1-555-0100', 'seniority': 'C-Level'},
-            {'name': 'Sarah Johnson', 'title': 'VP Operations', 'email': 'sarah@company.com', 'phone': '+1-555-0101', 'seniority': 'VP-Level'}
-        ]
+        'contacts': contacts
     }
 
 # App Header
@@ -341,7 +389,7 @@ if st.session_state.processed_results:
         """, unsafe_allow_html=True)
         
         # Tabs
-        company_tab, contacts_tab, summary_tab = st.tabs(["🏢 Company", "👥 Contacts", "📊 Summary"])
+        company_tab, contacts_tab, database_tab, summary_tab = st.tabs(["🏢 Company", "👥 Contacts", "🗄️ ZoomInfo DB", "📊 Summary"])
         
         with company_tab:
             col1, col2 = st.columns(2)
@@ -389,6 +437,126 @@ if st.session_state.processed_results:
                 )
             with col2:
                 st.button("📧 Send to CRM", use_container_width=True, key=f"crm_button_{i}")
+        
+        with database_tab:
+            st.markdown("#### 🗄️ ZoomInfo Database Matching Process")
+            
+            # Show the matching process
+            st.markdown(f"""
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #667eea;">🔍 Database Query Process</h5>
+                <p style="margin: 0; font-size: 0.9rem;"><strong>1. IP Analysis:</strong> {company_data['ip']} → {company_data['organization']}</p>
+                <p style="margin: 0; font-size: 0.9rem;"><strong>2. Company Matching:</strong> Searching for "{company_info['name']}" in ZoomInfo database</p>
+                <p style="margin: 0; font-size: 0.9rem;"><strong>3. Contact Extraction:</strong> Found {len(zoominfo_data['contacts'])} verified contacts</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show database statistics
+            st.markdown("##### 📊 Database Coverage Statistics")
+            
+            # Show available companies in database
+            if CONTACTS_DATABASE:
+                st.markdown("**Available Companies in ZoomInfo Database:**")
+                
+                db_stats = []
+                for company_key, contacts_list in CONTACTS_DATABASE.items():
+                    db_stats.append({
+                        'Company': company_key.title(),
+                        'Total Contacts': len(contacts_list),
+                        'C-Level': len([c for c in contacts_list if c.get('seniority') == 'C-Level']),
+                        'VP-Level': len([c for c in contacts_list if c.get('seniority') == 'VP-Level']),
+                        'Directors': len([c for c in contacts_list if c.get('seniority') == 'Director']),
+                        'Coverage': '🟢 Complete' if len(contacts_list) > 15 else '🟡 Partial'
+                    })
+                
+                db_df = pd.DataFrame(db_stats)
+                st.dataframe(db_df, use_container_width=True, hide_index=True)
+                
+                # Database summary metrics
+                total_contacts = sum(len(contacts) for contacts in CONTACTS_DATABASE.values())
+                total_companies = len(CONTACTS_DATABASE)
+                
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.markdown(f"""
+                    <div class="compact-metric">
+                        <h4>Total Companies</h4>
+                        <h2>{total_companies}</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                with col2:
+                    st.markdown(f"""
+                    <div class="compact-metric">
+                        <h4>Total Contacts</h4>
+                        <h2>{total_contacts:,}</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                with col3:
+                    avg_contacts = total_contacts // total_companies if total_companies > 0 else 0
+                    st.markdown(f"""
+                    <div class="compact-metric">
+                        <h4>Avg per Company</h4>
+                        <h2>{avg_contacts}</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                with col4:
+                    st.markdown(f"""
+                    <div class="compact-metric">
+                        <h4>Database Status</h4>
+                        <h2>🟢 Online</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Show matching algorithm
+            st.markdown("##### 🤖 Matching Algorithm")
+            
+            st.markdown("""
+            <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px;">
+                <h6 style="margin: 0 0 0.5rem 0; color: #1976D2;">How We Match Contacts:</h6>
+                <ol style="margin: 0; padding-left: 1.2rem; font-size: 0.9rem;">
+                    <li><strong>IP Geolocation:</strong> Extract organization name from IP address</li>
+                    <li><strong>Company Recognition:</strong> Match against aviation industry database</li>
+                    <li><strong>Contact Selection:</strong> Randomly select 8-15 verified contacts</li>
+                    <li><strong>Data Enrichment:</strong> Add confidence scores and verification status</li>
+                    <li><strong>Quality Assurance:</strong> Ensure contact diversity across seniority levels</li>
+                </ol>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Show data freshness
+            st.markdown("##### 🔄 Data Freshness & Verification")
+            
+            verification_stats = {
+                'Verified': len([c for c in zoominfo_data['contacts'] if '✅' in c.get('verified', '')]),
+                'Pending': len([c for c in zoominfo_data['contacts'] if '⚠️' in c.get('verified', '')])
+            }
+            
+            fig_verification = go.Figure(data=[go.Pie(
+                labels=list(verification_stats.keys()),
+                values=list(verification_stats.values()),
+                hole=0.4,
+                marker_colors=['#00C851', '#ffbb33']
+            )])
+            fig_verification.update_layout(
+                title="Contact Verification Status",
+                height=250,
+                margin=dict(l=20, r=20, t=40, b=20)
+            )
+            st.plotly_chart(fig_verification, use_container_width=True, key=f"verification_pie_{i}")
+            
+            # Show API simulation
+            st.markdown("##### 🔌 API Integration Status")
+            st.markdown("""
+            <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h6 style="margin: 0 0 0.5rem 0; color: #856404;">📡 Demo Mode Active</h6>
+                <p style="margin: 0; font-size: 0.9rem;">Currently using simulated ZoomInfo database for demonstration.</p>
+                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;"><strong>Production Setup:</strong> Connect to real ZoomInfo API for live data access.</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with summary_tab:
             # Mobile-optimized summary
