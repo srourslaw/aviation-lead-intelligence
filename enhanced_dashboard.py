@@ -357,6 +357,19 @@ def search_zoominfo(company_name, ip_address):
     }
 
 # App Header
+# Thakral One Branding Header
+st.markdown("""
+<div style="margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 15px;">
+    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+        <img src="https://www.thakralone.com/wp-content/uploads/2020/08/Thakral-One-Logo.png" 
+             alt="Thakral One Logo" 
+             style="height: 40px; margin-right: 16px;">
+        <span style="color: #1f1f1f; font-size: 20px; font-weight: bold;">Prototype by Thakral One</span>
+        <span style="color: #666; font-size: 16px; margin-left: 20px; font-weight: 500;">© 2025 Proprietary AI Solution</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <div class="section-header">
     <h1>✈️ B&H Worldwide: Aviation Lead Intelligence</h1>
@@ -1141,8 +1154,34 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #666; padding: 1rem;">
-    <p><strong>🎯 Aviation Lead Intelligence Dashboard</strong></p>
-    <p>Convert anonymous website visitors into qualified business leads</p>
+<div style="
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    margin-top: 40px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+">
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+        <img src="https://www.thakralone.com/wp-content/uploads/2020/08/Thakral-One-Logo.png" 
+             alt="Thakral One Logo" 
+             style="height: 40px; margin-right: 15px; filter: brightness(0) invert(1);">
+        <h3 style="margin: 0; font-size: 24px; font-weight: bold;">Thakral One AI Solutions</h3>
+    </div>
+    <p style="font-size: 18px; margin: 10px 0; font-weight: 500;">🎯 Aviation Lead Intelligence Prototype</p>
+    <p style="font-size: 16px; margin: 8px 0;">Convert Anonymous Website Visitors into Qualified Business Leads</p>
+    <div style="border-top: 1px solid rgba(255,255,255,0.3); margin: 20px 0; padding-top: 20px;">
+        <p style="font-size: 14px; margin: 5px 0;"><strong>© 2025 Thakral One. All Rights Reserved.</strong></p>
+        <p style="font-size: 13px; margin: 5px 0;">Proprietary AI Prototype - Intellectual Property Protected</p>
+        <p style="font-size: 13px; margin: 5px 0;">
+            <a href="https://www.thakralone.com" target="_blank" style="color: #87ceeb; text-decoration: none;">www.thakralone.com</a> | 
+            Further. Together.
+        </p>
+    </div>
+    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+        <p style="font-size: 16px; margin: 0; font-weight: bold;">Ready to transform your lead generation?</p>
+        <p style="font-size: 14px; margin: 5px 0;">Contact Thakral One to discuss your AI-powered business intelligence</p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
